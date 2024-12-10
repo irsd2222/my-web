@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbit Simulation</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            color: #007bff;
+        }
+
+        #orbitPlot {
+            height: 600px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .modal-header {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #007bff;
+        }
+
+        .modal-footer button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+
+        .modal-footer button:hover {
+            background-color: #0056b3;
+        }
+
+        .form-group {
+            margin: 15px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            color: #555;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 5px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            font-size: 1.1em;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Prediksi Gerak Satelit Mengelilingi Planet</h1>
+
+    <!-- Plot area -->
+    <div id="orbitPlot"></div>
+
+    <!-- Button to open modal -->
+    <div style="text-align: center; margin-top: 20px;">
+        <button class="btn" id="openModalBtn">Masukkan Detail Orbit</button>
+    </div>
+
+    <!-- Modal for input -->
+    <div id="inputModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Masukkan Detail Orbit</div>
+            <form id="orbitForm">
+                <div class="form-group">
+                    <label for="planet">Pilih Planet:</label>
+                    <select id="planet" name="planet">
+                        <option value="Bumi">Bumi</option>
+                        <option value="Mars">Mars</option>
+                        <option value="Jupiter">Jupiter</option>
+                        <option value="Venus">Venus</option>
+                        <option value="Saturnus">Saturnus</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="mass">Massa Satelit (kg):</label>
+                    <input type="number" id="mass" name="mass" placeholder="Masukkan massa satelit" required>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" id="startSimulation" class="btn">Mulai Simulasi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const G = 6.67430e-11;
+
+        const planets = {
+            "Bumi": { mass: 5.972e24, radius: 6371e3 },
+            "Mars": { mass: 6.4171e23, radius: 3.3962e6 },
+            "Jupiter": { mass: 1.898e27, radius: 6.991e7 },
+            "Venus": { mass: 4.8675e24, radius: 6051.8e3 },
+            "Saturnus": { mass: 5.683e26, radius: 60268e3 }
+        };
+
+        // Functions for simulation (same as before)
+        function acceleration(r, M) {
+            const r_magnitude = Math.sqrt(r[0] * r[0] + r[1] * r[1]);
+            return [(-G * M * r[0]) / Math.pow(r_magnitude, 3), (-G * M * r[1]) / Math.pow(r_magnitude, 3)];
+        }
+
+        function rungeKutta(f, r0, v0, M, t0, tf, dt) {
+            const t = [];
+            const r = [];
+            const v = [];
+            for (let time = t0; time < tf; time += dt) {
+                t.push(time);
+                r.push([...r0]);
+                v.push([...v0]);
+
+                const k1v = f(r0, M).map(a => a * dt);
+                const k1r = v0.map(a => a * dt);
+
+                const k2v = f([r0[0] + 0.5 * k1r[0], r0[1] + 0.5 * k1r[1]], M).map(a => a * dt);
+                const k2r = [v0[0] + 0.5 * k1v[0], v0[1] + 0.5 * k1v[1]].map(a => a * dt);
+
+                const k3v = f([r0[0] + 0.5 * k2r[0], r0[1] + 0.5 * k2r[1]], M).map(a => a * dt);
+                const k3r = [v0[0] + 0.0 * k2v[0], v0[1] + 0.0 * k2v[1]].map(a => a * dt);
+
+                const k4v = f([r0[0] + k3r[0], r0[1] + k3r[1]], M).map(a => a * dt);
+                const k4r = [v0[0] + k3v[0], v0[1] + k3v[1]].map(a => a * dt);
+
+                v0[0] += (1 / 6) * (k1v[0] + 2 * k2v[0] + 2 * k3v[0] + k4v[0]);
+                v0[1] += (1 / 6) * (k1v[1] + 2 * k2v[1] + 2 * k3v[1] + k4v[1]);
+
+                r0[0] += (1 / 6) * (k1r[0] + 2 * k2r[0] + 2 * k3r[0] + k4r[0]);
+                r0[1] += (1 / 6) * (k1r[1] + 2 * k2r[1] + 2 * k3r[1] + k4r[1]);
+            }
+            return { t, r, v };
+        }
+
+        function choosePlanet(planetName) {
+            if (!(planetName in planets)) {
+                throw new Error("Planet tidak ditemukan.");
+            }
+            return [planets[planetName].mass, planets[planetName].radius];
+        }
+
+        // Open modal for input
+        document.getElementById('openModalBtn').addEventListener('click', function() {
+            document.getElementById('inputModal').style.display = 'block';
+        });
+
+        // Close modal when the user clicks the button to start simulation
+        document.getElementById('startSimulation').addEventListener('click', function() {
+            const planetName = document.getElementById('planet').value;
+            const M_satellite = parseFloat(document.getElementById('mass').value);
+
+            // Posisi dan kecepatan awal
+            const r0 = [planets[planetName].radius + 1000e3, 0];
+            const v0 = [0, 7.12e3]; 
+
+            const t0 = 0;
+            const tf = 86400 * 10;
+            const dt = 60;
+
+            const [M_planet, R_planet] = choosePlanet(planetName);
+            const { t, r, v } = rungeKutta(acceleration, r0, v0, M_planet, t0, tf, dt);
+
+            const distances = r.map(pos => Math.sqrt(pos[0] * pos[0] + pos[1] * pos[1]));
+            const periapsisIndex = distances.indexOf(Math.min(...distances));
+            const apoapsisIndex = distances.indexOf(Math.max(...distances));
+
+            // Menampilkan grafik orbit
+            const trace = {
+                x: r.map(pos => pos[0]),
+                y: r.map(pos => pos[1]),
+                mode: 'lines',
+                name: `Lintasan Satelit di sekitar ${planetName}`,
+                line: { color: 'blue', width: 2 }
+            };
+
+            const periapsisTrace = {
+                x: [r[periapsisIndex][0]],
+                y: [r[periapsisIndex][1]],
+                mode: 'markers',
+                name: 'Periapsis',
+                marker: { color: 'red', size: 10 }
+            };
+
+            const apoapsisTrace = {
+                x: [r[apoapsisIndex][0]],
+                y: [r[apoapsisIndex][1]],
+                mode: 'markers',
+                name: 'Apoapsis',
+                marker: { color: 'green', size: 10 }
+            };
+
+            const layout = {
+                title: `Prediksi Gerak Satelit Mengelilingi ${planetName}`,
+                xaxis: { title: 'Posisi X (meter)' },
+                yaxis: { title: 'Posisi Y (meter)' },
+                showlegend: true
+            };
+
+            Plotly.newPlot('orbitPlot', [trace, periapsisTrace, apoapsisTrace], layout);
+
+            document.getElementById('inputModal').style.display = 'none';
+        });
+    </script>
+
+</body>
+</html>

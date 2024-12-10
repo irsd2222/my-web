@@ -1,0 +1,90 @@
+.hero {
+    background-image: url('images/background.jpg'); /* Path lokal ke gambar */
+    background-size: cover; /* Pastikan gambar menutupi seluruh area */
+    background-position: center; /* Pusatkan gambar */
+    background-repeat: no-repeat; /* Jangan ulangi gambar */
+    height: 100vh; /* Tinggi elemen sesuai tinggi layar */
+    width: 100%; /* Lebar elemen sesuai lebar layar */
+    display: flex; /* Untuk mengatur posisi konten */
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white; /* Teks berwarna putih agar kontras */
+}
+
+
+
+/* Styling Header */
+header {
+    background-color: rgba(0, 0, 0, 0.7); /* Background transparan untuk header */
+    padding: 10px 0;
+}
+
+header h1 {
+    color: white;
+    text-align: center;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    text-align: center;
+}
+
+nav ul li {
+    display: inline;
+    margin: 0 15px;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+nav ul li a:hover {
+    text-decoration: underline;
+}
+
+/* Artikel Section */
+.articles {
+    margin: 40px 0;
+}
+
+.article-item {
+    margin-bottom: 20px;
+}
+
+.article-item h3 a {
+    color: #333;
+    text-decoration: none;
+}
+
+.article-item h3 a:hover {
+    text-decoration: underline;
+}
+
+/* Button Styling */
+.btn-container {
+    margin-top: 20px;
+}
+
+.btn {
+    background-color: #007BFF;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+/* Footer Styling */
+footer {
+    background-color: #333; /* Ganti warna latar belakang footer */
+    color: white; /* Warna teks footer */
+    text-align: center;
+    padding: 20px 0;
+}
